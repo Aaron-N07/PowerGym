@@ -31,6 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
         enlace.className = 'page-link';
         enlace.href = '#';
         enlace.textContent = etiqueta;
+        if (opciones.titulo) {
+            enlace.title = opciones.titulo;
+            enlace.setAttribute('aria-label', opciones.titulo);
+        }
         enlace.addEventListener('click', function (evento) {
             evento.preventDefault();
             if (!opciones.deshabilitado) {
@@ -44,11 +48,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderizarControles(total) {
         paginacion.innerHTML = '';
-        paginacion.appendChild(crearItem('Anterior', paginaActual - 1, { deshabilitado: paginaActual === 1 }));
-        for (let pagina = 1; pagina <= total; pagina++) {
+        const desde = Math.max(1, paginaActual - 1);
+        const hasta = Math.min(total, paginaActual + 1);
+
+        paginacion.appendChild(crearItem('«', 1, { deshabilitado: paginaActual === 1, titulo: 'Primera pagina' }));
+        paginacion.appendChild(crearItem('‹', paginaActual - 1, { deshabilitado: paginaActual === 1, titulo: 'Pagina anterior' }));
+
+        if (desde > 1) {
+            paginacion.appendChild(crearItem('1', 1));
+        }
+        if (desde > 2) {
+            paginacion.appendChild(crearPuntosSuspensivos());
+        }
+        for (let pagina = desde; pagina <= hasta; pagina++) {
             paginacion.appendChild(crearItem(String(pagina), pagina, { activo: pagina === paginaActual }));
         }
-        paginacion.appendChild(crearItem('Siguiente', paginaActual + 1, { deshabilitado: paginaActual === total }));
+        if (hasta < total - 1) {
+            paginacion.appendChild(crearPuntosSuspensivos());
+        }
+        if (hasta < total) {
+            paginacion.appendChild(crearItem(String(total), total));
+        }
+
+        paginacion.appendChild(crearItem('›', paginaActual + 1, { deshabilitado: paginaActual === total, titulo: 'Pagina siguiente' }));
+        paginacion.appendChild(crearItem('»', total, { deshabilitado: paginaActual === total, titulo: 'Ultima pagina' }));
+    }
+
+    function crearPuntosSuspensivos() {
+        const li = document.createElement('li');
+        li.className = 'page-item disabled';
+        const span = document.createElement('span');
+        span.className = 'page-link';
+        span.textContent = '…';
+        li.appendChild(span);
+        return li;
     }
 
     function renderizarInfo(inicio, fin) {
