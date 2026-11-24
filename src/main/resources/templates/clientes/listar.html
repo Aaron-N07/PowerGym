@@ -7,11 +7,6 @@
 <body>
 <main>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Listado de clientes</h1>
-        <a class="btn btn-primary" th:href="@{/clientes/nuevo}">Nuevo cliente</a>
-    </div>
-
     <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${mensaje}">
         <span th:text="${mensaje}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -22,14 +17,29 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <div class="d-flex justify-content-end align-items-center gap-2 mb-2" th:if="${not #lists.isEmpty(clientes)}">
-        <label for="tamano-pagina" class="form-label mb-0 text-nowrap">Clientes por pagina</label>
-        <select id="tamano-pagina" class="form-select form-select-sm selector-tamano-pagina">
-            <option value="10" selected>10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-        </select>
+    <!-- Todo lo que cambia al paginar vive dentro de este contenedor.
+         El JS (clientes-paginacion.js) le pide al servidor el fragmento "tabla-clientes"
+         de la pagina nueva y lo sustituye, sin recargar la pagina entera. -->
+    <div id="contenedor-clientes">
+    <div th:fragment="tabla-clientes">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Listado de clientes</h1>
+        <a class="btn btn-primary" th:href="@{/clientes/nuevo(pagina=${pagina}, tamano=${tamano})}">Nuevo cliente</a>
     </div>
+
+    <!-- Al cambiar el tamano se vuelve a la pagina 1. Sin JS, el boton Aplicar hace lo mismo -->
+    <form method="get" th:action="@{/clientes}"
+          class="d-flex justify-content-end align-items-center gap-2 mb-2"
+          th:if="${totalClientes > 0}">
+        <label for="tamano" class="form-label mb-0 text-nowrap">Clientes por pagina</label>
+        <select id="tamano" name="tamano" class="form-select form-select-sm selector-tamano-pagina">
+            <option value="10" th:selected="${tamano == 10}">10</option>
+            <option value="25" th:selected="${tamano == 25}">25</option>
+            <option value="50" th:selected="${tamano == 50}">50</option>
+        </select>
+        <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Aplicar</button></noscript>
+    </form>
 
     <div class="table-responsive">
         <table class="table table-striped table-hover align-middle">
@@ -45,7 +55,7 @@
             </tr>
             </thead>
             <tbody id="cuerpo-tabla-clientes">
-            <tr th:each="cliente : ${clientes}" data-cliente>
+            <tr th:each="cliente : ${clientes}">
                 <td th:text="${cliente.nombre}"></td>
                 <td th:text="${cliente.apellidos}"></td>
                 <td th:text="${cliente.dni}"></td>
@@ -54,9 +64,9 @@
                 <td th:text="${#temporals.format(cliente.fechaAlta, 'dd/MM/yyyy')}"></td>
                 <td class="text-end">
                     <a class="btn btn-sm btn-outline-secondary"
-                       th:href="@{/clientes/editar/{id}(id=${cliente.id})}">Editar</a>
+                       th:href="@{/clientes/editar/{id}(id=${cliente.id}, pagina=${pagina}, tamano=${tamano})}">Editar</a>
                     <form class="d-inline" method="post"
-                          th:action="@{/clientes/eliminar/{id}(id=${cliente.id})}"
+                          th:action="@{/clientes/eliminar/{id}(id=${cliente.id}, pagina=${pagina}, tamano=${tamano})}"
                           onsubmit="return confirm('¿Seguro que deseas eliminar este cliente?');">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
                     </form>
@@ -69,11 +79,41 @@
         </table>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" th:if="${not #lists.isEmpty(clientes)}">
-        <small id="info-paginacion" class="text-muted"></small>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" th:if="${totalClientes > 0}">
+        <small class="text-muted"
+               th:text="'Mostrando ' + ${desde} + '-' + ${hasta} + ' de ' + ${totalClientes} + ' clientes'"></small>
+
+        <!-- Cada enlace es una peticion nueva al servidor: /clientes?pagina=N&tamano=T -->
         <nav aria-label="Paginacion de clientes">
-            <ul id="paginacion-clientes" class="pagination pagination-sm mb-0"></ul>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" th:classappend="${pagina == 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/clientes(pagina=1, tamano=${tamano})}" title="Primera pagina">&laquo;</a>
+                </li>
+                <li class="page-item" th:classappend="${pagina == 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/clientes(pagina=${pagina - 1}, tamano=${tamano})}" title="Pagina anterior">&lsaquo;</a>
+                </li>
+
+                <li class="page-item" th:if="${pagina > 1}">
+                    <a class="page-link" th:href="@{/clientes(pagina=${pagina - 1}, tamano=${tamano})}" th:text="${pagina - 1}"></a>
+                </li>
+                <li class="page-item active">
+                    <a class="page-link" th:href="@{/clientes(pagina=${pagina}, tamano=${tamano})}" th:text="${pagina}"></a>
+                </li>
+                <li class="page-item" th:if="${pagina < totalPaginas}">
+                    <a class="page-link" th:href="@{/clientes(pagina=${pagina + 1}, tamano=${tamano})}" th:text="${pagina + 1}"></a>
+                </li>
+
+                <li class="page-item" th:classappend="${pagina == totalPaginas} ? 'disabled'">
+                    <a class="page-link" th:href="@{/clientes(pagina=${pagina + 1}, tamano=${tamano})}" title="Pagina siguiente">&rsaquo;</a>
+                </li>
+                <li class="page-item" th:classappend="${pagina == totalPaginas} ? 'disabled'">
+                    <a class="page-link" th:href="@{/clientes(pagina=${totalPaginas}, tamano=${tamano})}" title="Ultima pagina">&raquo;</a>
+                </li>
+            </ul>
         </nav>
+    </div>
+
+    </div>
     </div>
 
     <script th:src="@{/js/clientes-paginacion.js}"></script>

@@ -12,6 +12,9 @@
     <form method="post" th:action="@{/clientes/guardar}" th:object="${cliente}" class="row g-3">
 
         <input type="hidden" th:field="*{id}">
+        <!-- Para volver a la misma pagina del listado al guardar -->
+        <input type="hidden" name="pagina" th:value="${pagina}">
+        <input type="hidden" name="tamano" th:value="${tamano}">
 
         <div class="col-md-6">
             <label class="form-label" for="nombre">Nombre</label>
@@ -63,7 +66,7 @@
 
         <div class="col-12 mt-4">
             <button type="submit" class="btn btn-primary">Guardar</button>
-            <a class="btn btn-outline-secondary" th:href="@{/clientes}">Cancelar</a>
+            <a class="btn btn-outline-secondary" th:href="@{/clientes(pagina=${pagina}, tamano=${tamano})}">Cancelar</a>
         </div>
 
     </form>

@@ -8,6 +8,10 @@ public interface ClienteService {
 
     List<Cliente> listarTodos();
 
+    List<Cliente> listarPagina(int pagina, int tamano);
+
+    long contarTodos();
+
     Cliente buscarPorId(Long id);
 
     Cliente guardar(Cliente cliente);

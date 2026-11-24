@@ -29,6 +29,20 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteRepository.findAll();
     }
 
+    // pagina empieza en 1. Ejemplo: pagina 2 con tamano 10 -> salta 10 y trae 10
+    @Override
+    @Transactional(readOnly = true)
+    public List<Cliente> listarPagina(int pagina, int tamano) {
+        int desplazamiento = (pagina - 1) * tamano;
+        return clienteRepository.findPage(tamano, desplazamiento);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long contarTodos() {
+        return clienteRepository.count();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Cliente buscarPorId(Long id) {

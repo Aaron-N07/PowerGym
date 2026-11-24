@@ -9,6 +9,10 @@ public interface ClienteRepository {
 
     List<Cliente> findAll();
 
+    List<Cliente> findPage(int limite, int desplazamiento);
+
+    long count();
+
     Optional<Cliente> findById(Long id);
 
     boolean existsById(Long id);

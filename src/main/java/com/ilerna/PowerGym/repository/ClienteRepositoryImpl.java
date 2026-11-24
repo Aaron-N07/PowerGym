@@ -35,6 +35,20 @@ public class ClienteRepositoryImpl implements ClienteRepository {
         return jdbcTemplate.query(sql, clienteRowMapper());
     }
 
+    // Trae solo una pagina: LIMIT = cuantos registros, OFFSET = cuantos se saltan
+    @Override
+    public List<Cliente> findPage(int limite, int desplazamiento) {
+        String sql = SQL_SELECT_BASE + " ORDER BY id LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, clienteRowMapper(), limite, desplazamiento);
+    }
+
+    // Total de clientes, para saber cuantas paginas hay
+    @Override
+    public long count() {
+        Long total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM cliente", Long.class);
+        return total == null ? 0 : total;
+    }
+
     @Override
     public Optional<Cliente> findById(Long id) {
         String sql = SQL_SELECT_BASE + " WHERE id = ?";
